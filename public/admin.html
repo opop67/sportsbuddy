@@ -135,6 +135,23 @@
       .admin-data-table tr:hover td {
         background: rgba(76, 175, 80, 0.06);
       }
+      .admin-data-table tr.admin-row-highlight td {
+        background: rgba(76, 175, 80, 0.22);
+        outline: 1px solid var(--accent);
+      }
+      .admin-fk-link {
+        font: inherit;
+        padding: 0;
+        border: none;
+        background: none;
+        color: var(--accent);
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .admin-fk-link:hover {
+        color: #81c784;
+      }
     </style>
   </head>
   <body class="admin-page">
@@ -143,8 +160,10 @@
       <a class="admin-back" href="/home.html">← Back to app</a>
     </header>
     <p class="admin-note">
-      ER overview of app tables. Click a table name to load up to 500 rows. Intended for local development — protect or
-      remove in production.
+      ER overview of app tables. Click a table name to load up to 500 rows. Underlined IDs open the related table and
+      highlight the matching row (e.g. <code>user_id</code> → <code>users.id</code>, <code>users.id</code> →
+      <code>arrangements</code> by <code>user_id</code>). Intended for local development — protect or remove in
+      production.
     </p>
 
     <div class="admin-layout">
@@ -169,12 +188,19 @@ erDiagram
     int level
     timestamptz created_at
   }
+  arrangement_participants {
+    int arrangement_id FK
+    int user_id FK
+    timestamptz joined_at
+  }
   session {
     varchar sid PK
     json sess
     timestamptz expire
   }
   users ||--o{ arrangements : "user_id"
+  arrangements ||--o{ arrangement_participants : "arrangement_id"
+  users ||--o{ arrangement_participants : "user_id"
   users ||--o{ session : "logical via sess.userId"
           </pre>
         </div>
@@ -207,6 +233,36 @@ erDiagram
         return escapeHtml(v);
       }
 
+      // Klikbare FK/PK: kolonne -> hvilken tabel der aabnes og hvilken kolonne der matches for highlight.
+      const FK_NAV = {
+        "arrangements.user_id": { target: "users", matchColumn: "id" },
+        "arrangements.id": { target: "arrangement_participants", matchColumn: "arrangement_id" },
+        "users.id": { target: "arrangements", matchColumn: "user_id" },
+        "arrangement_participants.arrangement_id": { target: "arrangements", matchColumn: "id" },
+        "arrangement_participants.user_id": { target: "users", matchColumn: "id" },
+      };
+
+      function renderCellHtml(tableName, col, value) {
+        if (value === null || value === undefined) return "";
+        const nav = FK_NAV[tableName + "." + col];
+        const raw = typeof value === "object" ? JSON.stringify(value) : String(value);
+        if (nav && /^\d+$/.test(raw.trim())) {
+          const v = raw.trim();
+          return (
+            '<button type="button" class="admin-fk-link" data-target="' +
+            escapeHtml(nav.target) +
+            '" data-col="' +
+            escapeHtml(nav.matchColumn) +
+            '" data-val="' +
+            escapeHtml(v) +
+            '">' +
+            escapeHtml(v) +
+            "</button>"
+          );
+        }
+        return cellValue(value);
+      }
+
       async function fetchJson(path) {
         const res = await fetch(path, { credentials: "same-origin" });
         const data = await res.json().catch(() => ({}));
@@ -219,7 +275,22 @@ erDiagram
       const dataMsg = document.getElementById("data-msg");
       const dataTableHost = document.getElementById("data-table-host");
 
-      async function loadTable(name) {
+      dataTableHost.addEventListener("click", (event) => {
+        const btn = event.target.closest(".admin-fk-link");
+        if (!btn) return;
+        event.preventDefault();
+        const target = btn.getAttribute("data-target");
+        const col = btn.getAttribute("data-col");
+        const val = btn.getAttribute("data-val");
+        if (!target || !col || val == null) return;
+        setActiveChip(target);
+        loadTable(target, { highlightColumn: col, highlightValue: val });
+      });
+
+      async function loadTable(name, options) {
+        const highlightColumn = options && options.highlightColumn;
+        const highlightValue = options && options.highlightValue;
+
         dataTitle.textContent = "Table: " + name;
         dataMsg.textContent = "Loading…";
         dataMsg.className = "msg";
@@ -244,9 +315,14 @@ erDiagram
           const tbody = document.createElement("tbody");
           for (const row of payload.rows) {
             const tr = document.createElement("tr");
+            const highlighted =
+              highlightColumn &&
+              highlightValue != null &&
+              String(row[highlightColumn]) === String(highlightValue);
+            if (highlighted) tr.classList.add("admin-row-highlight");
             for (const col of payload.columns) {
               const td = document.createElement("td");
-              td.innerHTML = cellValue(row[col]);
+              td.innerHTML = renderCellHtml(name, col, row[col]);
               tr.appendChild(td);
             }
             tbody.appendChild(tr);
@@ -256,6 +332,12 @@ erDiagram
           wrap.className = "admin-table-scroll";
           wrap.appendChild(table);
           dataTableHost.appendChild(wrap);
+          const firstHi = wrap.querySelector(".admin-row-highlight");
+          if (firstHi) {
+            requestAnimationFrame(() => {
+              firstHi.scrollIntoView({ block: "center", behavior: "smooth" });
+            });
+          }
         } catch (e) {
           dataMsg.textContent = e.message || "Failed to load.";
           dataMsg.className = "err";

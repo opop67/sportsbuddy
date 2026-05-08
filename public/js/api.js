@@ -342,9 +342,26 @@ async function initArrangementsPage() {
     arrangementsList.innerHTML = list
       .map((item) => {
         const fee = Number(item.fee || 0);
-        const players = Number(item.players || 0);
-        const split = fee > 0 && players > 0 ? Math.round(fee / players) : 0;
+        const capacity = Number(item.players || 0);
+        const joinedCount = Number(item.participant_count ?? 0);
+        const split = fee > 0 && capacity > 0 ? Math.round(fee / capacity) : 0;
         const level = Math.min(10, Math.max(1, Number(item.level || 5)));
+        const joinedMe = item.joined_by_me === true || item.joined_by_me === "true";
+        const full = capacity > 0 && joinedCount >= capacity;
+        let joinControl = "";
+        if (joinedMe) {
+          joinControl =
+            '<button type="button" class="btn-arrangement-join btn-arrangement-unjoin" data-leave-arrangement="' +
+            Number(item.id) +
+            '">Unjoin</button>';
+        } else if (full) {
+          joinControl = '<button type="button" class="btn-arrangement-join full" disabled>Full</button>';
+        } else {
+          joinControl =
+            '<button type="button" class="btn-arrangement-join" data-join-arrangement="' +
+            Number(item.id) +
+            '">Join</button>';
+        }
         return (
           '<article class="arrangement-item">' +
           '<div class="arrangement-icon" aria-hidden="true">' +
@@ -357,9 +374,11 @@ async function initArrangementsPage() {
           "<p>" +
           escapeHtml(item.location) +
           " · " +
-          players +
-          " players · " +
-          (fee > 0 ? "Split " + split + " kr/person" : "No fee") +
+          joinedCount +
+          " / " +
+          capacity +
+          " joined · " +
+          (fee > 0 ? "Split ~" + split + " kr/person if full" : "No fee") +
           "</p>" +
           '<div class="arrangement-level">' +
           '<span class="arrangement-level-label">Level: ' +
@@ -374,6 +393,9 @@ async function initArrangementsPage() {
           "</div>" +
           "</div>" +
           "</div>" +
+          '<div class="arrangement-actions">' +
+          joinControl +
+          "</div>" +
           "</article>"
         );
       })
@@ -383,6 +405,35 @@ async function initArrangementsPage() {
   function setArrangeModal(open) {
     arrangeModal.hidden = !open;
   }
+
+  arrangementsList.addEventListener("click", async (event) => {
+    const leaveBtn = event.target.closest("[data-leave-arrangement]");
+    const joinBtn = event.target.closest("[data-join-arrangement]");
+    const btn = leaveBtn || joinBtn;
+    if (!btn) return;
+    const rawId = leaveBtn
+      ? leaveBtn.getAttribute("data-leave-arrangement")
+      : joinBtn.getAttribute("data-join-arrangement");
+    if (!rawId) return;
+    btn.disabled = true;
+    try {
+      if (leaveBtn) {
+        await apiJson("/api/arrangements/" + encodeURIComponent(rawId) + "/leave", {
+          method: "POST",
+          body: "{}",
+        });
+      } else {
+        await apiJson("/api/arrangements/" + encodeURIComponent(rawId) + "/join", {
+          method: "POST",
+          body: "{}",
+        });
+      }
+      await renderArrangements();
+    } catch (err) {
+      btn.disabled = false;
+      window.alert(err.message || (leaveBtn ? "Could not unjoin." : "Could not join."));
+    }
+  });
 
   btnOpenArrange.addEventListener("click", () => setArrangeModal(true));
   btnCloseArrange.addEventListener("click", () => setArrangeModal(false));
@@ -713,17 +764,19 @@ async function initBadgesPage() {
     const data = await apiJson("/api/me");
     const user = data.user;
     const { arrangements } = await apiJson("/api/arrangements");
+    const stats = await apiJson("/api/arrangements/my-stats");
     const arrangedCount = (arrangements || []).filter((a) => a.user_id === user.id).length;
     const key = "sportsbuddy_badges_" + user.id;
     const stored = JSON.parse(localStorage.getItem(key) || "null");
     const metrics =
       stored || {
         arrangedCount,
-        participatedCount: 9,
+        participatedCount: stats.joinedCount,
         teamPlayerRating: 4.4,
         motivatedCount: 12,
       };
     metrics.arrangedCount = arrangedCount;
+    metrics.participatedCount = stats.joinedCount;
     localStorage.setItem(key, JSON.stringify(metrics));
     renderBadges(metrics);
   } catch {

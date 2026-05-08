@@ -35,7 +35,31 @@ async function ensureSchema() {
     ON arrangements (created_at DESC);
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS arrangement_participants (
+      arrangement_id INTEGER NOT NULL REFERENCES arrangements (id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+      joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (arrangement_id, user_id)
+    );
+  `);
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS arrangement_participants_user_idx
+    ON arrangement_participants (user_id);
+  `);
+  await pool.query(`
+    INSERT INTO arrangement_participants (arrangement_id, user_id)
+    SELECT a.id, a.user_id FROM arrangements a
+    ON CONFLICT (arrangement_id, user_id) DO NOTHING;
+  `);
+
   await seedDemoArrangementsIfEmpty();
+
+  await pool.query(`
+    INSERT INTO arrangement_participants (arrangement_id, user_id)
+    SELECT a.id, a.user_id FROM arrangements a
+    ON CONFLICT (arrangement_id, user_id) DO NOTHING;
+  `);
 }
 
 // Indsaetter de tre tidligere "nearby" demo-arrangements naar databasen er tom (foerste start).

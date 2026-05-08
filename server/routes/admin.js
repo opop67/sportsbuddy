@@ -3,7 +3,7 @@ const { pool } = require("../db");
 
 const router = express.Router();
 
-const ALLOWED_TABLES = new Set(["users", "arrangements", "session"]);
+const ALLOWED_TABLES = new Set(["users", "arrangements", "arrangement_participants", "session"]);
 
 function quoteIdent(name) {
   if (!ALLOWED_TABLES.has(name)) {
