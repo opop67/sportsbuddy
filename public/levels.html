@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Levels — Sportsbuddy</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="app-page" data-page="levels">
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="/home.html" aria-label="Sportsbuddy home">
+          <img
+            class="brand-logo-img"
+            src="/img/logo.png"
+            alt="Sportsbuddy logo"
+          />
+        </a>
+        <div class="header-center-nav" aria-label="Primary page navigation">
+          <div class="header-nav-group">
+            <a href="/home.html" class="header-nav-btn">Home</a>
+            <a href="/arrangements.html" class="header-nav-btn">Arrangements</a>
+          </div>
+          <p class="header-slogan">More Than Fitness!</p>
+          <div class="header-nav-group">
+            <a href="/levels.html" class="header-nav-btn active">Levels</a>
+            <a href="/badges.html" class="header-nav-btn">Badges</a>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="icon-btn" aria-label="Notifikationer">
+            <span aria-hidden="true">🔔</span>
+          </button>
+          <div class="menu-wrap">
+            <button
+              type="button"
+              class="icon-btn menu-btn"
+              id="btn-menu"
+              aria-label="Menu"
+              aria-expanded="false"
+              aria-controls="main-menu"
+            >
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </button>
+            <nav class="menu-dropdown" id="main-menu" hidden>
+              <a href="/home.html" class="menu-item">Home</a>
+              <a href="/profile.html" class="menu-item">Profile</a>
+              <a href="/arrangements.html" class="menu-item">Arrange session</a>
+              <button type="button" class="menu-item menu-logout" id="btn-logout">
+                Log ud
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main class="levels-main">
+        <section class="levels-grid-wrap">
+          <h1>Levels by sport</h1>
+          <div id="levels-grid" class="levels-grid"></div>
+        </section>
+
+        <aside class="level-detail-wrap">
+          <div class="overall-score-card">
+            <p class="overall-score-label">Overall level</p>
+            <p class="overall-score-value" id="overall-score-value">-</p>
+          </div>
+
+          <div class="level-detail-card">
+            <h2 id="level-detail-title">Padel details</h2>
+            <p class="level-detail-points" id="level-detail-points">Points: 0</p>
+            <p class="level-detail-note">
+              Match points are based on opponent rating:
+              win vs higher rated gives more points, win vs lower rated gives fewer points.
+            </p>
+            <div id="match-history" class="match-history"></div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+  </body>
+</html>

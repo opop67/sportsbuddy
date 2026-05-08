@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arrangements — Sportsbuddy</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="app-page" data-page="arrangements">
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="/home.html" aria-label="Sportsbuddy home">
+          <img
+            class="brand-logo-img"
+            src="/img/logo.png"
+            alt="Sportsbuddy logo"
+          />
+        </a>
+        <div class="header-center-nav" aria-label="Primary page navigation">
+          <div class="header-nav-group">
+            <a href="/home.html" class="header-nav-btn">Home</a>
+            <a href="/arrangements.html" class="header-nav-btn active">Arrangements</a>
+          </div>
+          <p class="header-slogan">More Than Fitness!</p>
+          <div class="header-nav-group">
+            <a href="/levels.html" class="header-nav-btn">Levels</a>
+            <a href="/badges.html" class="header-nav-btn">Badges</a>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="icon-btn" aria-label="Notifikationer">
+            <span aria-hidden="true">🔔</span>
+          </button>
+          <div class="menu-wrap">
+            <button
+              type="button"
+              class="icon-btn menu-btn"
+              id="btn-menu"
+              aria-label="Menu"
+              aria-expanded="false"
+              aria-controls="main-menu"
+            >
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </button>
+            <nav class="menu-dropdown" id="main-menu" hidden>
+              <a href="/home.html" class="menu-item">Home</a>
+              <a href="/profile.html" class="menu-item">Profile</a>
+              <a href="/arrangements.html" class="menu-item">Arrange session</a>
+              <button type="button" class="menu-item menu-logout" id="btn-logout">
+                Log ud
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main class="arrange-main">
+        <section class="arrangements-board">
+          <div class="arrangements-top">
+            <button type="button" class="btn btn-primary" id="btn-open-arrange">
+              Arrange
+            </button>
+          </div>
+
+          <h1>Arrangements near you</h1>
+          <div id="arrangements-list" class="arrangements-list"></div>
+        </section>
+
+        <section id="arrange-modal" class="arrange-modal" hidden>
+          <div class="arrange-modal-card">
+            <div class="arrange-modal-top">
+              <h2>Create arrangement</h2>
+              <button type="button" class="icon-btn" id="btn-close-arrange" aria-label="Close">
+                ✕
+              </button>
+            </div>
+            <p id="arrange-msg" class="msg" role="alert"></p>
+            <form id="arrange-form" class="arrange-form">
+              <div class="field">
+                <label for="sport">Sport</label>
+                <input id="sport" name="sport" type="text" required placeholder="Fx Padel" />
+              </div>
+              <div class="field">
+                <label for="players">How many people can join</label>
+                <input id="players" name="players" type="text" required placeholder="Fx 8" />
+              </div>
+              <div class="field">
+                <label for="location">Where</label>
+                <input id="location" name="location" type="text" required placeholder="Fx Sportshall A" />
+              </div>
+              <div class="field">
+                <label for="fee">Price / fee total (kr)</label>
+                <input id="fee" name="fee" type="text" placeholder="Fx 240" />
+              </div>
+              <button type="submit" class="btn btn-primary arrange-submit">Save arrangement</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="/js/api.js"></script>
+  </body>
+</html>

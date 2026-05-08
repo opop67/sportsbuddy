@@ -1,0 +1,2 @@
+docker compose down
+docker compose --profile dev up -d --build db web-dev

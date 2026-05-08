@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Log ind — Sportsbuddy</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body data-page="login">
+    <div class="page-shell">
+      <div class="card">
+        <h1>Log ind</h1>
+        <p class="lead">
+          Opret en bruger under «Opret konto», eller log ind med dit navn og
+          adgangskode. Session gemmes på serveren (PostgreSQL).
+        </p>
+        <p id="msg" class="msg" role="alert"></p>
+        <form id="form" novalidate>
+          <div class="field">
+            <label for="username">Navn</label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              autocomplete="username"
+              placeholder="Fx Mette"
+              required
+              minlength="2"
+              maxlength="80"
+            />
+          </div>
+          <div class="field">
+            <label for="password">Adgangskode</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              placeholder="Mindst 6 tegn"
+              required
+              minlength="6"
+            />
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn btn-primary" id="btn-login">
+              Log ind
+            </button>
+          </div>
+        </form>
+        <p class="link-row">
+          Ingen konto? <a href="/register.html">Opret konto</a>
+        </p>
+      </div>
+    </div>
+    <script src="/js/api.js"></script>
+  </body>
+</html>

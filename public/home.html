@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="da">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hjem — Sportsbuddy</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="app-page" data-page="home">
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="/home.html" aria-label="Sportsbuddy home">
+          <img
+            class="brand-logo-img"
+            src="/img/logo.png"
+            alt="Sportsbuddy logo"
+          />
+        </a>
+        <div class="header-center-nav" aria-label="Primary page navigation">
+          <div class="header-nav-group">
+            <a href="/home.html" class="header-nav-btn active">Home</a>
+            <a href="/arrangements.html" class="header-nav-btn">Arrangements</a>
+          </div>
+          <p class="header-slogan">More Than Fitness!</p>
+          <div class="header-nav-group">
+            <a href="/levels.html" class="header-nav-btn">Levels</a>
+            <a href="/badges.html" class="header-nav-btn">Badges</a>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button type="button" class="icon-btn" aria-label="Notifikationer">
+            <span aria-hidden="true">🔔</span>
+          </button>
+          <div class="menu-wrap">
+            <button
+              type="button"
+              class="icon-btn menu-btn"
+              id="btn-menu"
+              aria-label="Menu"
+              aria-expanded="false"
+              aria-controls="main-menu"
+            >
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </button>
+            <nav class="menu-dropdown" id="main-menu" hidden>
+              <a href="/home.html" class="menu-item">Home</a>
+              <a href="/profile.html" class="menu-item">Profile</a>
+              <a href="/arrangements.html" class="menu-item">Arrange session</a>
+              <button type="button" class="menu-item menu-logout" id="btn-logout">
+                Log ud
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main class="home-main">
+        <div class="card">
+          <section class="home-profile-box">
+            <div class="home-profile-avatar" id="home-profile-avatar">S</div>
+            <div class="home-profile-text">
+              <p class="home-profile-welcome" id="home-profile-welcome">Welcome back</p>
+              <p class="home-profile-sport" id="home-profile-sport">Preferred sport: Not set</p>
+            </div>
+          </section>
+          <section class="overview-grid" aria-label="Home overview">
+            <a href="#" class="overview-box">
+              <h2>News</h2>
+              <p>2 nye opdateringer i dag om events og lokale hold.</p>
+            </a>
+
+            <a href="/arrangements.html" class="overview-box">
+              <h2>Arangements</h2>
+              <p id="arrangements-preview">Ingen kommende arrangements endnu.</p>
+            </a>
+
+            <a href="/levels.html" class="overview-box">
+              <h2>Your level</h2>
+              <p class="level-text" id="home-level-text">Current level: - / 10</p>
+              <div
+                class="level-track"
+                role="progressbar"
+                aria-valuemin="1"
+                aria-valuemax="10"
+                aria-valuenow="1"
+                aria-label="Current level"
+              >
+                <span class="level-fill" id="home-level-fill" style="width: 10%"></span>
+              </div>
+            </a>
+
+            <a href="/badges.html" class="overview-box">
+              <h2>Sports buddy badge</h2>
+              <p>Rising Teammate badge unlocked this week.</p>
+            </a>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="/js/api.js"></script>
+  </body>
+</html>

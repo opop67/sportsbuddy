@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin — database</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body.admin-page {
+        display: block;
+        padding: 1.5rem;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .admin-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+      }
+      .admin-header h1 {
+        margin: 0;
+        font-size: 1.35rem;
+      }
+      .admin-back {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .admin-back:hover {
+        text-decoration: underline;
+      }
+      .admin-note {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin: 0 0 1rem;
+      }
+      .admin-layout {
+        display: grid;
+        gap: 1.25rem;
+      }
+      @media (min-width: 900px) {
+        .admin-layout {
+          grid-template-columns: 1fr 1fr;
+          align-items: start;
+        }
+      }
+      .admin-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-card);
+        padding: 1rem 1.1rem;
+        overflow: auto;
+      }
+      .admin-card h2 {
+        margin: 0 0 0.75rem;
+        font-size: 1rem;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+      .mermaid-wrap {
+        min-height: 280px;
+        display: flex;
+        justify-content: center;
+      }
+      .table-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
+      .table-chip {
+        font: inherit;
+        cursor: pointer;
+        padding: 0.45rem 0.85rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--input-bg);
+        color: var(--text);
+      }
+      .table-chip:hover {
+        border-color: var(--accent);
+      }
+      .table-chip.active {
+        background: var(--accent);
+        color: var(--accent-text);
+        border-color: var(--accent);
+      }
+      .table-chip.unavailable {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .data-panel h2 {
+        margin-top: 0;
+      }
+      .data-panel .msg {
+        color: var(--text-muted);
+        margin: 0;
+      }
+      .data-panel .err {
+        color: var(--danger);
+        margin: 0;
+      }
+      .admin-table-scroll {
+        overflow: auto;
+        max-height: 55vh;
+        margin-top: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-control);
+      }
+      .admin-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .admin-data-table th,
+      .admin-data-table td {
+        padding: 0.45rem 0.6rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+        word-break: break-word;
+        max-width: 280px;
+      }
+      .admin-data-table th {
+        position: sticky;
+        top: 0;
+        background: #1e1e1e;
+        z-index: 1;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .admin-data-table tr:hover td {
+        background: rgba(76, 175, 80, 0.06);
+      }
+    </style>
+  </head>
+  <body class="admin-page">
+    <header class="admin-header">
+      <h1>Admin — PostgreSQL</h1>
+      <a class="admin-back" href="/home.html">← Back to app</a>
+    </header>
+    <p class="admin-note">
+      ER overview of app tables. Click a table name to load up to 500 rows. Intended for local development — protect or
+      remove in production.
+    </p>
+
+    <div class="admin-layout">
+      <section class="admin-card">
+        <h2>ER diagram</h2>
+        <div class="mermaid-wrap">
+          <pre class="mermaid">
+erDiagram
+  users {
+    serial id PK
+    varchar_80 username UK
+    varchar_255 password_hash
+    timestamptz created_at
+  }
+  arrangements {
+    serial id PK
+    int user_id FK
+    varchar_120 sport
+    int players
+    varchar_255 location
+    int fee
+    int level
+    timestamptz created_at
+  }
+  session {
+    varchar sid PK
+    json sess
+    timestamptz expire
+  }
+  users ||--o{ arrangements : "user_id"
+  users ||--o{ session : "logical via sess.userId"
+          </pre>
+        </div>
+        <p class="admin-note" style="margin: 0.5rem 0 0">Tables — click to view data:</p>
+        <div id="table-chips" class="table-chips"></div>
+      </section>
+
+      <section class="admin-card data-panel">
+        <h2 id="data-title">Table data</h2>
+        <p id="data-msg" class="msg">Select a table above.</p>
+        <div id="data-table-host"></div>
+      </section>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({ startOnLoad: true, theme: "dark", securityLevel: "loose" });
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function cellValue(v) {
+        if (v === null || v === undefined) return "";
+        if (typeof v === "object") return escapeHtml(JSON.stringify(v));
+        return escapeHtml(v);
+      }
+
+      async function fetchJson(path) {
+        const res = await fetch(path, { credentials: "same-origin" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      }
+
+      const chipsHost = document.getElementById("table-chips");
+      const dataTitle = document.getElementById("data-title");
+      const dataMsg = document.getElementById("data-msg");
+      const dataTableHost = document.getElementById("data-table-host");
+
+      async function loadTable(name) {
+        dataTitle.textContent = "Table: " + name;
+        dataMsg.textContent = "Loading…";
+        dataMsg.className = "msg";
+        dataTableHost.innerHTML = "";
+        try {
+          const payload = await fetchJson("/api/admin/table/" + encodeURIComponent(name));
+          dataMsg.textContent = payload.rows.length + " row(s) shown (max 500).";
+          if (payload.columns.length === 0) {
+            return;
+          }
+          const table = document.createElement("table");
+          table.className = "admin-data-table";
+          const thead = document.createElement("thead");
+          const trh = document.createElement("tr");
+          for (const col of payload.columns) {
+            const th = document.createElement("th");
+            th.textContent = col;
+            trh.appendChild(th);
+          }
+          thead.appendChild(trh);
+          table.appendChild(thead);
+          const tbody = document.createElement("tbody");
+          for (const row of payload.rows) {
+            const tr = document.createElement("tr");
+            for (const col of payload.columns) {
+              const td = document.createElement("td");
+              td.innerHTML = cellValue(row[col]);
+              tr.appendChild(td);
+            }
+            tbody.appendChild(tr);
+          }
+          table.appendChild(tbody);
+          const wrap = document.createElement("div");
+          wrap.className = "admin-table-scroll";
+          wrap.appendChild(table);
+          dataTableHost.appendChild(wrap);
+        } catch (e) {
+          dataMsg.textContent = e.message || "Failed to load.";
+          dataMsg.className = "err";
+        }
+      }
+
+      function setActiveChip(name) {
+        chipsHost.querySelectorAll(".table-chip").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.table === name);
+        });
+      }
+
+      async function init() {
+        let meta;
+        try {
+          meta = await fetchJson("/api/admin/meta");
+        } catch (e) {
+          chipsHost.innerHTML = '<p class="err">Could not load table list.</p>';
+          return;
+        }
+        chipsHost.innerHTML = "";
+        for (const t of meta.tables) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "table-chip" + (t.available ? "" : " unavailable");
+          btn.dataset.table = t.name;
+          btn.textContent = t.name + (t.available ? " (" + t.rowCount + ")" : " (no table yet)");
+          if (t.available) {
+            btn.addEventListener("click", () => {
+              setActiveChip(t.name);
+              loadTable(t.name);
+            });
+          }
+          chipsHost.appendChild(btn);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
